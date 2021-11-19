@@ -321,6 +321,96 @@ where
         let rx = UarteRx::new(rx_buf)?;
         Ok((tx, rx))
     }
+
+    /// Enables interrupt for specified command.
+    #[inline(always)]
+    pub fn enable_interrupt(&self, event: UarteEvent) -> &Self {
+        self.0.intenset.modify(|_r, w| match event {
+            UarteEvent::Cts => w.cts().set_bit(),
+            UarteEvent::NCts => w.ncts().set_bit(),
+            UarteEvent::RxdRdy => w.rxdrdy().set_bit(),
+            UarteEvent::EndRx => w.endrx().set_bit(),
+            UarteEvent::TxdRdy => w.txdrdy().set_bit(),
+            UarteEvent::EndTx => w.endtx().set_bit(),
+            UarteEvent::Error => w.error().set_bit(),
+            UarteEvent::RxTo => w.rxto().set_bit(),
+            UarteEvent::RxStarted => w.rxstarted().set_bit(),
+            UarteEvent::TxStarted => w.txstarted().set_bit(),
+            UarteEvent::TxStopped => w.txstopped().set_bit(),
+        });
+        self
+    }
+
+    /// Disable interrupt for specified command.
+    #[inline(always)]
+    pub fn disable_interrupt(&self, event: UarteEvent) -> &Self {
+        self.0.intenclr.modify(|_r, w| match event {
+            UarteEvent::Cts => w.cts().set_bit(),
+            UarteEvent::NCts => w.ncts().set_bit(),
+            UarteEvent::RxdRdy => w.rxdrdy().set_bit(),
+            UarteEvent::EndRx => w.endrx().set_bit(),
+            UarteEvent::TxdRdy => w.txdrdy().set_bit(),
+            UarteEvent::EndTx => w.endtx().set_bit(),
+            UarteEvent::Error => w.error().set_bit(),
+            UarteEvent::RxTo => w.rxto().set_bit(),
+            UarteEvent::RxStarted => w.rxstarted().set_bit(),
+            UarteEvent::TxStarted => w.txstarted().set_bit(),
+            UarteEvent::TxStopped => w.txstopped().set_bit(),
+        });
+        self
+    }
+
+    /// Resets read and write events.
+    #[inline(always)]
+    pub fn reset_events(&self) {
+        self.0.events_cts.reset();
+        self.0.events_ncts.reset();
+        self.0.events_rxdrdy.reset();
+        self.0.events_endrx.reset();
+        self.0.events_txdrdy.reset();
+        self.0.events_endtx.reset();
+        self.0.events_error.reset();
+        self.0.events_rxto.reset();
+        self.0.events_rxstarted.reset();
+        self.0.events_txstarted.reset();
+        self.0.events_txstopped.reset();
+    }
+
+    /// Resets specified event.
+    #[inline(always)]
+    pub fn reset_event(&self, event: UarteEvent) {
+        match event {
+            UarteEvent::Cts => self.0.events_cts.reset(),
+            UarteEvent::NCts => self.0.events_ncts.reset(),
+            UarteEvent::RxdRdy => self.0.events_rxdrdy.reset(),
+            UarteEvent::EndRx => self.0.events_endrx.reset(),
+            UarteEvent::TxdRdy => self.0.events_txdrdy.reset(),
+            UarteEvent::EndTx => self.0.events_endtx.reset(),
+            UarteEvent::Error => self.0.events_error.reset(),
+            UarteEvent::RxTo => self.0.events_rxto.reset(),
+            UarteEvent::RxStarted => self.0.events_rxstarted.reset(),
+            UarteEvent::TxStarted => self.0.events_txstarted.reset(),
+            UarteEvent::TxStopped => self.0.events_txstopped.reset(),
+        };
+    }
+
+    /// Checks if specified event has been triggered.
+    #[inline(always)]
+    pub fn is_event_triggered(&self, event: UarteEvent) -> bool {
+        match event {
+            UarteEvent::Cts => self.0.events_cts.read().bits() != 0,
+            UarteEvent::NCts => self.0.events_ncts.read().bits() != 0,
+            UarteEvent::RxdRdy => self.0.events_rxdrdy.read().bits() != 0,
+            UarteEvent::EndRx => self.0.events_endrx.read().bits() != 0,
+            UarteEvent::TxdRdy => self.0.events_txdrdy.read().bits() != 0,
+            UarteEvent::EndTx => self.0.events_endtx.read().bits() != 0,
+            UarteEvent::Error => self.0.events_error.read().bits() != 0,
+            UarteEvent::RxTo => self.0.events_rxto.read().bits() != 0,
+            UarteEvent::RxStarted => self.0.events_rxstarted.read().bits() != 0,
+            UarteEvent::TxStarted => self.0.events_txstarted.read().bits() != 0,
+            UarteEvent::TxStopped => self.0.events_txstopped.read().bits() != 0,
+        }
+    }
 }
 
 /// Write via UARTE.
@@ -478,6 +568,21 @@ pub enum Error {
     Receive,
     Timeout(usize),
     BufferNotInRAM,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub enum UarteEvent {
+    Cts,
+    NCts,
+    RxdRdy,
+    EndRx,
+    TxdRdy,
+    EndTx,
+    Error,
+    RxTo,
+    RxStarted,
+    TxStarted,
+    TxStopped,
 }
 
 pub trait Instance: Deref<Target = uarte0::RegisterBlock> + sealed::Sealed {
